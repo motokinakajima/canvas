@@ -166,13 +166,6 @@ private:
 
 class camera {
 public:
-    /*
-    camera(std::vector<double> camera_coordinate,double camera_depth, const world& camera_world){
-        World(camera_world.get_width(), camera_world.get_height(), camera_world.get_depth(), camera_world.get_max_item_num());
-        coordinate = std::move(camera_coordinate);
-        depth = camera_depth;
-    }
-    */
     camera(std::vector<double> camera_coordinate, double camera_depth, const world& camera_world)
         : World(camera_world), coordinate(std::move(camera_coordinate)), depth(camera_depth) {}
 
