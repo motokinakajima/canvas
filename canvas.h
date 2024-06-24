@@ -22,6 +22,9 @@ public:
     }
 
     void draw_pixel(int x, int y, int content){
+        if((data.size() < y or y < 0) or (data.at(0).size() < x or x < 0)){
+            return;
+        }
         data[y][x] = content;
     }
 
