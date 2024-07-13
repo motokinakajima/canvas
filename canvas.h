@@ -139,54 +139,65 @@ private:
     int dimension;
 };
 
-class world {
-public:
-    world(double max_width, double max_height, double max_depth, int max_item_num)
-        : width(max_width), height(max_height), depth(max_depth), items(max_item_num, model()) {}
-
-    void add_item(model Model){
-        for(int i = 0;i < items.size();i++){
-            if(items[i].get_side().size() == 0){
-                items[i] = std::move(Model);
-                break;
-            }
-        }
-    }
-
-    void print_items(){
-        for(int i = 0;i < items.size();i++){
-            items[i].print_data();
-        }
-    }
-    double get_width() const { return width; }
-    double get_height() const { return height; }
-    double get_depth() const { return depth; }
-    int get_max_item_num() const { return items.size(); }
-private:
-    double width, height, depth;
-    std::vector<model> items;
-};
-
 class camera {
 public:
-    camera(std::vector<double> camera_coordinate, double camera_depth, const world& camera_world)
-        : World(camera_world), coordinate(std::move(camera_coordinate)), depth(camera_depth) {}
+    camera() = default;
+    camera(std::vector<double> camera_coordinate, std::vector<double> camera_depth)
+            : coordinate(std::move(camera_coordinate)), rotation(std::move(camera_depth)) {}
 
     std::vector<double> get_coordinate() const { return coordinate; }
 
-    double get_depth() const { return depth; }
+    std::vector<double> get_rotation() const { return rotation; }
 
     void set_coordinate(std::vector<double>&& camera_coordinate) & {
         coordinate = std::move(camera_coordinate);
     }
 
-    void set_depth(double camera_depth) & {
-        depth = camera_depth;
+    void set_rotation(std::vector<double> camera_rotation) & {
+        rotation = std::move(camera_rotation);
+    }
+
+    std::vector<double> get_vector(){
+        return std::vector<double>{cos(rotation[1])*-1*cos(rotation[0]),sin(rotation[1])*-1*cos(rotation[0]),sin(rotation[0])};
     }
 private:
-    world World;
-    std::vector<double> coordinate;
-    double depth;
+    std::vector<double> coordinate {1,0,0};
+    std::vector<double> rotation {0,0};
+};
+
+class world {
+public:
+    world(double max_width, double max_height, double max_depth, int max_item_num, camera world_camera)
+        : width(max_width), height(max_height), depth(max_depth), items(max_item_num, model()), Camera(std::move(world_camera)) {}
+
+    void add_item(model Model){
+        for(int i = 0;i < items.size();i++){
+            if(items[i].get_side().empty()){
+                items[i] = std::move(Model);
+                break;
+            }
+        }
+    }
+    void print_items(){
+        for(int i = 0;i < items.size();i++){
+            items[i].print_data();
+        }
+    }
+
+    void render(model render_model){
+        std::vector<double> camera_coordinate = Camera.get_coordinate();
+        std::vector<double> camera_vector = Camera.get_vector();
+    }
+    double get_width() const { return width; }
+    double get_height() const { return height; }
+    double get_depth() const { return depth; }
+    int get_max_item_num() const { return items.size(); }
+    std::vector<model> get_items(){ return items; }
+    camera get_camera(){return Camera;}
+private:
+    double width, height, depth;
+    std::vector<model> items;
+    camera Camera;
 };
 
 #endif //GRAPHICS_CANVAS_H
