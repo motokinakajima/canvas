@@ -184,20 +184,51 @@ public:
         }
     }
 
-    void render(model render_model){
-        std::vector<double> camera_coordinate = Camera.get_coordinate();
-        std::vector<double> camera_vector = Camera.get_vector();
+    void render(int render_model_index, canvas render_canvas){
+        std::vector<std::vector<double>> model_vertex = items[render_model_index].get_vertex();
+        std::vector<std::vector<double>> rendered_vertex(model_vertex.size(),std::vector<double>(2,0));
+        for(int i = 0;i < model_vertex.size();i++){
+            rendered_vertex[i] = projection(model_vertex[i]);
+        }
+        model rendered_model;
+        rendered_model.set_vertex(rendered_vertex);
+        rendered_model.set_side(items[render_model_index].get_side());
+        rendered_model.print_data();
+        rendered_model.draw(std::move(render_canvas));
     }
+
     double get_width() const { return width; }
     double get_height() const { return height; }
     double get_depth() const { return depth; }
-    int get_max_item_num() const { return items.size(); }
+    unsigned long long int get_max_item_num() const { return items.size(); }
     std::vector<model> get_items(){ return items; }
     camera get_camera(){return Camera;}
 private:
     double width, height, depth;
     std::vector<model> items;
     camera Camera;
+
+    std::vector<double> projection(std::vector<double> coordinate){
+        std::vector<double> camera_coordinate = Camera.get_coordinate();
+        std::vector<double> camera_vector = Camera.get_vector();
+        double a = camera_vector[0];
+        double b = camera_vector[1];
+        double c = camera_vector[2];
+        double x0 = camera_coordinate[0];
+        double y0 = camera_coordinate[1];
+        double z0 = camera_coordinate[2];
+        double x1 = coordinate[0];
+        double y1 = coordinate[1];
+        double z1 = coordinate[2];
+        double t = (a*a + b*b + c*c) / (a*(x1-x0) + b*(y1-y0) + c*(z1-z0));
+        double delta_x = (1 - t)*x0 + t*x1 - (x0 + a);
+        double delta_z = (1 - t)*z0 + t*z1 - (z0 + c);
+        double horizontal_vector_length = sqrt((pow(b,2) + pow(a,2)));
+        double vertical_vector_length = sqrt(pow(a * b,2) + pow(b * c,2) + pow(pow(a,2)+pow(b,2),2));
+        double lambda = delta_x/b + (a*c*delta_z)/(b*(a*a + b*b));
+        double mu = delta_z/(-1*a*a + -1*b*b);
+        return std::vector<double> {lambda * horizontal_vector_length,mu * vertical_vector_length};
+    }
 };
 
 #endif //GRAPHICS_CANVAS_H
