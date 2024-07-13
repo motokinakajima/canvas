@@ -63,6 +63,9 @@ public:
             }
         }
     }
+
+    unsigned long long int get_width() const{ return data.at(0).size(); }
+    unsigned long long int get_height() const{ return data.size(); }
 private:
     std::vector<std::vector<int>> data;
 };
@@ -93,12 +96,13 @@ public:
     }
 
     canvas draw(canvas Canvas){
+        dimension = vertex.at(0).size();
         if(dimension != 2){
             std::cout<<"This model is not 2d"<<std::endl;
             return Canvas;
         }
-        for(int i = 0;i < side.size();i++){
-            Canvas.draw_line(vertex[side[i][0]][0],vertex[side[i][0]][1],vertex[side[i][1]][0],vertex[side[i][1]][1],1);
+        for(auto & i : side){
+            Canvas.draw_line(vertex[i[0]][0],vertex[i[0]][1],vertex[i[1]][0],vertex[i[1]][1],1);
             //std::cout<<"first: "<<side[i][0]<<"  second: "<<side[i][1]<<std::endl;
             //std::cout<<"x1: "<<vertex[side[i][0]][0]<<"  y1: "<<vertex[side[i][0]][1]<<"  x2: "<<vertex[side[i][1]][0]<<"  y2: "<<vertex[side[i][1]][1]<<std::endl;
             //Canvas.print_data();
@@ -136,14 +140,14 @@ public:
 private:
     std::vector<std::vector<double>> vertex;
     std::vector<std::vector<double>> side;
-    int dimension;
+    int dimension{};
 };
 
 class camera {
 public:
     camera() = default;
-    camera(std::vector<double> camera_coordinate, std::vector<double> camera_depth)
-            : coordinate(std::move(camera_coordinate)), rotation(std::move(camera_depth)) {}
+    camera(std::vector<double> camera_coordinate, std::vector<double> camera_rotation, double camera_FOV)
+            : coordinate(std::move(camera_coordinate)), rotation(std::move(camera_rotation)), FOV(camera_FOV) {}
 
     std::vector<double> get_coordinate() const { return coordinate; }
 
@@ -158,11 +162,18 @@ public:
     }
 
     std::vector<double> get_vector(){
-        return std::vector<double>{cos(rotation[1])*-1*cos(rotation[0]),sin(rotation[1])*-1*cos(rotation[0]),sin(rotation[0])};
+        double y_rad = rotation[0] * (M_PI / 180.0);
+        double z_rad = rotation[1] * (M_PI / 180.0);
+        return std::vector<double>{cos(z_rad)*-1*cos(y_rad),sin(z_rad)*-1*cos(y_rad),sin(y_rad)};
     }
+
+    double get_FOV_by_rad() const{ return FOV * (M_PI / 180.0); }
+
+    double get_FOV_by_deg() const{ return FOV; }
 private:
     std::vector<double> coordinate {1,0,0};
     std::vector<double> rotation {0,0};
+    double FOV = 100;
 };
 
 class world {
@@ -171,30 +182,32 @@ public:
         : width(max_width), height(max_height), depth(max_depth), items(max_item_num, model()), Camera(std::move(world_camera)) {}
 
     void add_item(model Model){
-        for(int i = 0;i < items.size();i++){
-            if(items[i].get_side().empty()){
-                items[i] = std::move(Model);
+        for(auto & item : items){
+            if(item.get_side().empty()){
+                item = std::move(Model);
                 break;
             }
         }
     }
     void print_items(){
-        for(int i = 0;i < items.size();i++){
-            items[i].print_data();
+        for(auto & item : items){
+            item.print_data();
         }
     }
 
-    void render(int render_model_index, canvas render_canvas){
+    canvas render(int render_model_index, canvas render_canvas){
         std::vector<std::vector<double>> model_vertex = items[render_model_index].get_vertex();
         std::vector<std::vector<double>> rendered_vertex(model_vertex.size(),std::vector<double>(2,0));
         for(int i = 0;i < model_vertex.size();i++){
-            rendered_vertex[i] = projection(model_vertex[i]);
+            rendered_vertex[i] = projection(model_vertex[i],render_canvas.get_width(),render_canvas.get_height());
         }
         model rendered_model;
         rendered_model.set_vertex(rendered_vertex);
         rendered_model.set_side(items[render_model_index].get_side());
+        std::cout<<"rendered model::"<<std::endl;
         rendered_model.print_data();
-        rendered_model.draw(std::move(render_canvas));
+        render_canvas = rendered_model.draw(std::move(render_canvas));
+        return render_canvas;
     }
 
     double get_width() const { return width; }
@@ -208,9 +221,75 @@ private:
     std::vector<model> items;
     camera Camera;
 
-    std::vector<double> projection(std::vector<double> coordinate){
+    std::vector<double> projection(std::vector<double> coordinate, double screen_width, double screen_height){
         std::vector<double> camera_coordinate = Camera.get_coordinate();
         std::vector<double> camera_vector = Camera.get_vector();
+        double a = camera_vector[0];
+        double b = camera_vector[1];
+        double c = camera_vector[2];
+        double x0 = camera_coordinate[0];
+        double y0 = camera_coordinate[1];
+        double z0 = camera_coordinate[2];
+        double x1 = coordinate[0];
+        double y1 = coordinate[1];
+        double z1 = coordinate[2];
+        // Convert FOV to radians
+        double fovRadians = Camera.get_FOV_by_rad();
+
+        // Calculate projection factor
+        double projectionFactor = 1.0 / tan(fovRadians / 2.0);
+
+        // Calculate t
+        double denominator_t = a * (x1 - x0) + b * (y1 - y0) + c * (z1 - z0);
+        if (denominator_t == 0) {
+            throw std::runtime_error("Denominator for calculating t is zero, leading to division by zero.");
+        }
+        double t = (a * a + b * b + c * c) / denominator_t;
+
+        // Calculate intersection point
+        double intersection_x = (1 - t) * x0 + t * x1;
+        double intersection_z = (1 - t) * z0 + t * z1;
+
+        // Calculate delta_x and delta_z
+        double delta_x = intersection_x - (x0 + a);
+        double delta_z = intersection_z - (z0 + c);
+
+        // Calculate horizontal vector length and vertical vector length
+        double horizontal_vector_length = sqrt(pow(b, 2) + pow(a, 2));
+        double vertical_vector_length = sqrt(pow(a * c, 2) + pow(b * c, 2) + pow(a * a + b * b, 2));
+
+        double lambda = 0.0, mu = 0.0;
+
+        if (b != 0) {
+            // Calculate lambda
+            lambda = delta_x / b + (a * c * delta_z) / (b * (a * a + b * b));
+        } else if (a != 0) {
+            // Handle case where b is zero
+            lambda = delta_x / a;
+        } else {
+            // Handle case where both a and b are zero (horizontal vector is zero)
+            horizontal_vector_length = 0;
+        }
+
+        if (a * a + b * b != 0) {
+            // Calculate mu
+            mu = delta_z / (-a * a - b * b);
+        } else {
+            // Handle case where both a and b are zero (vertical vector is undefined)
+            vertical_vector_length = sqrt(pow(c, 2)); // Vertical component is purely c
+            mu = delta_z / (-c * c);
+        }
+
+        // Adjust lengths based on FOV and screen width
+        double lambda_length = (lambda * horizontal_vector_length) * projectionFactor * screen_width - screen_width/2;
+        double mu_length = (mu * vertical_vector_length) * projectionFactor * screen_width - screen_height/2;
+
+        return std::vector<double>{lambda_length, mu_length};
+        /*
+        std::vector<double> camera_coordinate = Camera.get_coordinate();
+        std::vector<double> camera_vector = Camera.get_vector();
+        double camera_FOV = Camera.get_FOV_by_rad();
+        double projection_factor = (1.0 / tan(camera_FOV / 2.0)) * screen_width;
         double a = camera_vector[0];
         double b = camera_vector[1];
         double c = camera_vector[2];
@@ -227,7 +306,8 @@ private:
         double vertical_vector_length = sqrt(pow(a * b,2) + pow(b * c,2) + pow(pow(a,2)+pow(b,2),2));
         double lambda = delta_x/b + (a*c*delta_z)/(b*(a*a + b*b));
         double mu = delta_z/(-1*a*a + -1*b*b);
-        return std::vector<double> {lambda * horizontal_vector_length,mu * vertical_vector_length};
+        return std::vector<double> {lambda * horizontal_vector_length * projection_factor,mu * vertical_vector_length * projection_factor};
+         */
     }
 };
 
