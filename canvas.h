@@ -70,9 +70,9 @@ private:
 class model {
 public:
     model() = default;
-    model(int vertex_num,int side_num,int model_dimention){
-        dimention = model_dimention;
-        vertex = std::vector<std::vector<double>> (vertex_num,std::vector<double>(dimention));
+    model(int vertex_num,int side_num,int model_dimension){
+        dimension = model_dimension;
+        vertex = std::vector<std::vector<double>> (vertex_num,std::vector<double>(dimension));
         side = std::vector<std::vector<double>> (side_num,std::vector<double>(2));
     }
 
@@ -93,7 +93,7 @@ public:
     }
 
     canvas draw(canvas Canvas){
-        if(dimention != 2){
+        if(dimension != 2){
             std::cout<<"This model is not 2d"<<std::endl;
             return Canvas;
         }
@@ -136,7 +136,7 @@ public:
 private:
     std::vector<std::vector<double>> vertex;
     std::vector<std::vector<double>> side;
-    int dimention;
+    int dimension;
 };
 
 class world {
