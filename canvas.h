@@ -22,7 +22,7 @@ public:
     }
 
     void draw_pixel(int x, int y, int content){
-        if((data.size() < y or y < 0) or (data.at(0).size() < x or x < 0)){
+        if(y >= data.size() || y < 0 || x >= data.at(0).size() || x < 0){
             return;
         }
         data[y][x] = content;
@@ -281,8 +281,8 @@ private:
         }
 
         // Adjust lengths based on FOV and screen width
-        double lambda_length = (lambda * horizontal_vector_length) * projectionFactor * screen_width - screen_width/2;
-        double mu_length = (mu * vertical_vector_length) * projectionFactor * screen_width - screen_height/2;
+        double lambda_length = (lambda * horizontal_vector_length) * projectionFactor * screen_width + screen_width/2;
+        double mu_length = (mu * vertical_vector_length) * projectionFactor * screen_width + screen_height/2;
 
         return std::vector<double>{lambda_length, mu_length};
         /*
