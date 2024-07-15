@@ -28,6 +28,16 @@ public:
         data[y][x] = content;
     }
 
+    void fill_circle(int cx, int cy, int radius, int content) {
+        for (int y = -radius; y <= radius; ++y) {
+            for (int x = -radius; x <= radius; ++x) {
+                if (x * x + y * y <= radius * radius) {
+                    draw_pixel(cx + x, cy + y, content);
+                }
+            }
+        }
+    }
+
     void draw_line(int x1,int y1, int x2, int y2, int content){
         if(std::abs(x2-x1)<std::abs(y2-y1)){
             //std::cout<<"y base"<<std::endl;

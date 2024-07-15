@@ -19,7 +19,7 @@ int main() {
     //Canvas = Rectangle.draw(Canvas);
     //Canvas.print_data();
     std::cout<<std::endl;
-    camera myCamera = camera({1,0,0},{10,10},100);
+    camera myCamera = camera({-2,0,0},{-10,20},100);
     world World = world(100,100,100,3,myCamera);
     World.add_item(cube);
     World.print_items();
