@@ -29,8 +29,8 @@ public:
     }
 
     void fill_circle(int cx, int cy, int radius, int content) {
-        for (int y = -radius; y <= radius; ++y) {
-            for (int x = -radius; x <= radius; ++x) {
+        for (int y = -radius; y <= radius; y++) {
+            for (int x = -radius; x <= radius; x++) {
                 if (x * x + y * y <= radius * radius) {
                     draw_pixel(cx + x, cy + y, content);
                 }
@@ -38,7 +38,7 @@ public:
         }
     }
 
-    void draw_line(int x1,int y1, int x2, int y2, int content){
+    void draw_line(int x1,int y1, int x2, int y2, int thickness, int content){
         if(std::abs(x2-x1)<std::abs(y2-y1)){
             //std::cout<<"y base"<<std::endl;
             if(y1 > y2){
@@ -52,7 +52,7 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for(int i = y1; i <= y2; i++){
-                draw_pixel(std::round((i-y1)*(x2+1-x1)/(y2+1-y1))+x1,i,content);
+                fill_circle(std::round((i-y1)*(x2+1-x1)/(y2+1-y1))+x1,i, thickness,content);
                 //std::cout<<"x: "<<std::round((i-y1)*(x2+1-x1)/(y2+1-y1))+x1<<" y: "<<i<<std::endl;
             }
         }else{
@@ -68,7 +68,7 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for(int i = x1; i <= x2; i++){
-                draw_pixel(i,std::round((i-x1)*(y2+1-y1)/(x2+1-x1))+y1,content);
+                fill_circle(i,std::round((i-x1)*(y2+1-y1)/(x2+1-x1))+y1,thickness,content);
                 //std::cout<<"x: "<<i<<" y: "<<std::round((i-x1)*(y2+1-y1)/(x2+1-x1))+y1<<std::endl;
             }
         }
