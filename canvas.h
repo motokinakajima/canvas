@@ -5,6 +5,8 @@
 #include <cmath>
 #include <utility>
 #include <vector>
+#include <conio.h>
+#include <windows.h>
 
 class canvas {
 public:
@@ -14,13 +16,28 @@ public:
         data = std::vector<std::vector<int>>(y, std::vector<int>(x, 0));
     }
 
+    void clear(){
+        for(int i = 0;i < data.size();i++){
+            for(int j = 0;j < data.at(0).size();j++){
+                data[i][j] = 0;
+            }
+        }
+    }
+
+    void goto_xy(int x, int y) {
+        COORD coord = { (SHORT)x, (SHORT)y };
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+    }
+
     void print_data() {
+        goto_xy(0,0);
         for (int i = 0; i < data.size(); i++) {
             for (int j = 0; j < data.at(0).size(); j++) {
                 std::cout << data[i][j] << " ";
             }
             std::cout << "\n";
         }
+        std::cout.flush();
     }
 
     void draw_pixel(int x, int y, int content) {
@@ -44,7 +61,7 @@ public:
         if (std::abs(x2 - x1) < std::abs(y2 - y1)) {
             //std::cout<<"y base"<<std::endl;
             if (y1 > y2) {
-                int tmp_x = x1, tmp_y = y1;
+                int tmp_x, tmp_y;
                 tmp_x = x1;
                 tmp_y = y1;
                 x1 = x2;
@@ -54,13 +71,13 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for (int i = y1; i <= y2; i++) {
-                fill_circle(std::round((i - y1) * (x2 + 1 - x1) / (y2 + 1 - y1)) + x1, i, thickness, content);
+                fill_circle(std::round((i - y1) * (x2 + 1 - x1) / (y2 + 1 - y1)) + x1, i, thickness / 2, content);
                 //std::cout<<"x: "<<std::round((i-y1)*(x2+1-x1)/(y2+1-y1))+x1<<" y: "<<i<<std::endl;
             }
         } else {
             //std::cout<<"x base"<<std::endl;
             if (x1 > x2) {
-                int tmp_x = x1, tmp_y = y1;
+                int tmp_x, tmp_y;
                 tmp_x = x1;
                 tmp_y = y1;
                 x1 = x2;
@@ -70,7 +87,7 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for (int i = x1; i <= x2; i++) {
-                fill_circle(i, std::round((i - x1) * (y2 + 1 - y1) / (x2 + 1 - x1)) + y1, thickness, content);
+                fill_circle(i, std::round((i - x1) * (y2 + 1 - y1) / (x2 + 1 - x1)) + y1, thickness / 2 , content);
                 //std::cout<<"x: "<<i<<" y: "<<std::round((i-x1)*(y2+1-y1)/(x2+1-x1))+y1<<std::endl;
             }
         }
@@ -117,7 +134,7 @@ public:
             return Canvas;
         }
         for (auto &i: side) {
-            Canvas.draw_line(vertex[i[0]][0], vertex[i[0]][1], vertex[i[1]][0], vertex[i[1]][1], 1);
+            Canvas.draw_line(vertex[i[0]][0], vertex[i[0]][1], vertex[i[1]][0], vertex[i[1]][1], 2, 1);
             //std::cout<<"first: "<<side[i][0]<<"  second: "<<side[i][1]<<std::endl;
             //std::cout<<"x1: "<<vertex[side[i][0]][0]<<"  y1: "<<vertex[side[i][0]][1]<<"  x2: "<<vertex[side[i][1]][0]<<"  y2: "<<vertex[side[i][1]][1]<<std::endl;
             //Canvas.print_data();
@@ -170,11 +187,11 @@ public:
 
     std::vector<double> get_rotation() const { return rotation; }
 
-    void set_coordinate(std::vector<double> &&camera_coordinate) &{
+    void set_coordinate(std::vector<double> camera_coordinate){
         coordinate = std::move(camera_coordinate);
     }
 
-    void set_rotation(std::vector<double> camera_rotation) &{
+    void set_rotation(std::vector<double> camera_rotation){
         rotation = std::move(camera_rotation);
     }
 
@@ -224,8 +241,8 @@ public:
         model rendered_model;
         rendered_model.set_vertex(rendered_vertex);
         rendered_model.set_side(items[render_model_index].get_side());
-        std::cout << "rendered model::" << std::endl;
-        rendered_model.print_data();
+        //std::cout << "rendered model::" << std::endl;
+        //rendered_model.print_data();
         render_canvas = rendered_model.draw(std::move(render_canvas));
         return render_canvas;
     }
@@ -311,29 +328,6 @@ private:
         double mu_length = (mu * vertical_vector_length) * projectionFactor * screen_width + screen_height / 2;
 
         return std::vector<double>{lambda_length, mu_length};
-        /*
-        std::vector<double> camera_coordinate = Camera.get_coordinate();
-        std::vector<double> camera_vector = Camera.get_vector();
-        double camera_FOV = Camera.get_FOV_by_rad();
-        double projection_factor = (1.0 / tan(camera_FOV / 2.0)) * screen_width;
-        double a = camera_vector[0];
-        double b = camera_vector[1];
-        double c = camera_vector[2];
-        double x0 = camera_coordinate[0];
-        double y0 = camera_coordinate[1];
-        double z0 = camera_coordinate[2];
-        double x1 = coordinate[0];
-        double y1 = coordinate[1];
-        double z1 = coordinate[2];
-        double t = (a*a + b*b + c*c) / (a*(x1-x0) + b*(y1-y0) + c*(z1-z0));
-        double delta_x = (1 - t)*x0 + t*x1 - (x0 + a);
-        double delta_z = (1 - t)*z0 + t*z1 - (z0 + c);
-        double horizontal_vector_length = sqrt((pow(b,2) + pow(a,2)));
-        double vertical_vector_length = sqrt(pow(a * b,2) + pow(b * c,2) + pow(pow(a,2)+pow(b,2),2));
-        double lambda = delta_x/b + (a*c*delta_z)/(b*(a*a + b*b));
-        double mu = delta_z/(-1*a*a + -1*b*b);
-        return std::vector<double> {lambda * horizontal_vector_length * projection_factor,mu * vertical_vector_length * projection_factor};
-         */
     }
 };
 
