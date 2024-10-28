@@ -1,7 +1,5 @@
 #include <iostream>
 #include "canvas.h"
-#include <conio.h>
-#include <windows.h>
 
 
 int main() {
@@ -39,36 +37,12 @@ int main() {
     //Canvas = Rectangle.draw(Canvas);
     //Canvas.print_data();
     std::cout << std::endl;
-    std::vector<double> camera_coordinate = {0,0,0};
-    camera myCamera = camera(camera_coordinate, {-1, -1}, 100);
+    camera myCamera = camera({-2, 0, 0}, {-10, 20}, 100);
     world World = world(100, 100, 100, 3, myCamera);
     World.add_item(cube);
-    //World.print_items();
+    World.print_items();
     Canvas = World.render(0, Canvas);
-    //Canvas.print_data();
     Canvas.print_data();
-    while (true){
-        char ch;
-        //Canvas.print_data();
-        if (_kbhit()) {
-            ch = _getch();
-
-            if (ch == 'q') break; // 'q'を押すと終了
-
-            switch (ch) {
-                case 'w': camera_coordinate[0]++; break;
-                case 's': camera_coordinate[0]--; break;
-                case 'a': camera_coordinate[1]++; break;
-                case 'd': camera_coordinate[1]--; break;
-            }
-            std::cout<<camera_coordinate[0]<<" "<<camera_coordinate[1]<<std::endl;
-
-            myCamera.set_coordinate(camera_coordinate);
-            Canvas.clear();
-            Canvas = World.render(0,Canvas);
-            Canvas.print_data();
-        }
-    }
     //int flag;
     //flag = std::cin.get();
     return 0;
