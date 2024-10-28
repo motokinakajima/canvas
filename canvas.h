@@ -117,7 +117,7 @@ public:
             return Canvas;
         }
         for (auto &i: side) {
-            Canvas.draw_line(vertex[i[0]][0], vertex[i[0]][1], vertex[i[1]][0], vertex[i[1]][1], 1);
+            Canvas.draw_line(vertex[i[0]][0], vertex[i[0]][1], vertex[i[1]][0], vertex[i[1]][1], 1, 1);
             //std::cout<<"first: "<<side[i][0]<<"  second: "<<side[i][1]<<std::endl;
             //std::cout<<"x1: "<<vertex[side[i][0]][0]<<"  y1: "<<vertex[side[i][0]][1]<<"  x2: "<<vertex[side[i][1]][0]<<"  y2: "<<vertex[side[i][1]][1]<<std::endl;
             //Canvas.print_data();
