@@ -1,10 +1,13 @@
 #ifndef GRAPHICS_CANVAS_H
 #define GRAPHICS_CANVAS_H
-
 #include <iostream>
 #include <cmath>
 #include <utility>
 #include <vector>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 class canvas {
 public:
@@ -23,24 +26,24 @@ public:
         }
     }
 
-    void draw_pixel(int x, int y, int content) {
+    void draw_pixel(int x, int y, int color) {
         if (y >= data.size() || y < 0 || x >= data.at(0).size() || x < 0) {
             return;
         }
-        data[y][x] = content;
+        data[y][x] = color;
     }
 
-    void fill_circle(int cx, int cy, int radius, int content) {
+    void fill_circle(int cx, int cy, int radius, int color) {
         for (int y = -radius; y <= radius; y++) {
             for (int x = -radius; x <= radius; x++) {
                 if (x * x + y * y <= radius * radius) {
-                    draw_pixel(cx + x, cy + y, content);
+                    draw_pixel(cx + x, cy + y, color);
                 }
             }
         }
     }
 
-    void draw_line(int x1, int y1, int x2, int y2, int thickness, int content) {
+    void draw_line(int x1, int y1, int x2, int y2, int thickness, int color) {
         if (std::abs(x2 - x1) < std::abs(y2 - y1)) {
             //std::cout<<"y base"<<std::endl;
             if (y1 > y2) {
@@ -54,7 +57,7 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for (int i = y1; i <= y2; i++) {
-                fill_circle(std::round((i - y1) * (x2 + 1 - x1) / (y2 + 1 - y1)) + x1, i, thickness, content);
+                fill_circle(std::round((i - y1) * (x2 + 1 - x1) / (y2 + 1 - y1)) + x1, i, thickness, color);
                 //std::cout<<"x: "<<std::round((i-y1)*(x2+1-x1)/(y2+1-y1))+x1<<" y: "<<i<<std::endl;
             }
         } else {
@@ -70,7 +73,7 @@ public:
             }
             //std::cout<<"x1: "<<x1<<" y1: "<<y1<<" x2: "<<x2<<" y2: "<<y2<<std::endl;
             for (int i = x1; i <= x2; i++) {
-                fill_circle(i, std::round((i - x1) * (y2 + 1 - y1) / (x2 + 1 - x1)) + y1, thickness, content);
+                fill_circle(i, std::round((i - x1) * (y2 + 1 - y1) / (x2 + 1 - x1)) + y1, thickness, color);
                 //std::cout<<"x: "<<i<<" y: "<<std::round((i-x1)*(y2+1-y1)/(x2+1-x1))+y1<<std::endl;
             }
         }
